@@ -28,30 +28,87 @@ else
   echo "Le paquet est installé !"
 fi
 
-if [ "$debian_version" = "jessie" ]; then
+if [ "$debian_version" = "buster" ]; then
   cd /tmp
-  wget http://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/deb-multimedia-keyring_2016.3.7_all.deb
-  sudo dpkg -i deb-multimedia-keyring_2016.3.7_all.deb
-  
+    
   if [ -f /etc/apt/sources.list.d/rutorrent.list ]; then
     sudo rm /etc/apt/sources.list.d/rutorrent.list
   fi
 
-  echo 'deb http://ftp2.fr.debian.org/debian/ jessie main non-free' | sudo tee -a /etc/apt/sources.list.d/rutorrent.list
-  echo 'deb-src http://ftp2.fr.debian.org/debian/ jessie main non-free' | sudo tee -a /etc/apt/sources.list.d/rutorrent.list
-else
-  echo 'deb ftp://ftp.deb-multimedia.org jessie main non-free' | sudo tee -a /etc/apt/sources.list.d/rutorrent.list
+  apt install -y apt-transport-https gnupg2
+  echo "#Depot sury-php
+deb https://packages.sury.org/php/ buster main" >> /etc/apt/sources.list.d/sury-php.list
+
+  echo "#Depot paquets proprietaires
+deb http://ftp2.fr.debian.org/debian/ buster main non-free
+deb-src http://ftp2.fr.debian.org/debian/ buster main non-free" >> /etc/apt/sources.list.d/non-free.list
+
+  echo "#Depot multimedia
+deb http://www.deb-multimedia.org buster main non-free" >> /etc/apt/sources.list.d/multimedia.list
+
+  echo "#Depot mediainfo
+deb http://mediaarea.net/repo/deb/debian/ buster main" >> /etc/apt/sources.list.d/mediainfo.list
+
+  wget https://packages.sury.org/php/apt.gpg -O sury.gpg && apt-key add sury.gpg
+
+  wget http://mediaarea.net/repo/deb/debian/pubkey.gpg -O mediainfo.gpg && apt-key add mediainfo.gpg
 
 fi
 
 # Install dependencies
-sudo apt-get update
-sudo apt-get install -y htop automake libcppunit-dev libtool build-essential pkg-config libssl-dev libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev screen subversion apache2-utils php5-cli php5-geoip unzip unrar rar zip ffmpeg buildtorrent mediainfo
+sudo apt-get update -oAcquire::AllowInsecureRepositories=true
+sudo apt install -y --allow-unauthenticated deb-multimedia-keyring
+sudo apt update
+
+sudo apt install -y \
+  apache2-utils \
+  automake \
+  htop \
+  build-essential \
+  curl \
+  ffmpeg \
+  gawk \
+  git \
+  libcppunit-dev \
+  libcurl4-openssl-dev \
+  libncurses5-dev \
+  libsigc++-2.0-dev \
+  libsox-fmt-all \
+  libsox-fmt-mp3 \
+  libssl-dev \
+  libtool \
+  mediainfo \
+  mktorrent \
+  net-tools \
+  nginx \
+  php7.3 \
+  php7.3-cli \
+  php7.3-common \
+  php7.3-curl \
+  php7.3-fpm \
+  php7.3-json \
+  php7.3-mbstring \
+  php7.3-opcache \
+  php7.3-readline \
+  php7.3-xml \
+  php-geoip \
+  pkg-config \
+  psmisc \
+  python-pip \
+  rar \
+  screen \
+  subversion \
+  unrar \
+  unzip \
+  sox \
+  vim \
+  zip \
+  zlib1g-dev
 
 # Build xmlrpc
 cd /tmp
-sudo svn checkout http://svn.code.sf.net/p/xmlrpc-c/code/stable xmlrpc-c
-cd xmlrpc-c/
+sudo git clone https://github.com/mirror/xmlrpc-c.git
+sudo cd xmlrpc-c/stable/
 sudo ./configure
 sudo make
 sudo make install
@@ -60,9 +117,9 @@ sudo make install
 cd /tmp
 sudo git clone https://github.com/rakshasa/libtorrent.git
 cd libtorrent
-sudo git checkout 0.13.6
+sudo git checkout v0.13.8
 sudo ./autogen.sh
-sudo ./configure
+sudo ./configure --disable-debug
 sudo make
 sudo make install
 
@@ -70,9 +127,9 @@ sudo make install
 cd /tmp
 sudo git clone https://github.com/rakshasa/rtorrent.git
 cd rtorrent
-sudo git checkout 0.9.6
+sudo git checkout 0.9.8
 sudo ./autogen.sh
-sudo ./configure --with-xmlrpc-c
+sudo ./configure --with-xmlrpc-c --with-ncurses --disable-debug
 sudo make
 sudo make install
 
@@ -81,12 +138,38 @@ sudo ldconfig
 # Install rutorrent
 sudo git clone https://github.com/Novik/ruTorrent.git /var/www/rutorrent
 
-# Install rutorrent plugins
+# Installation cloudscraper pour plugin _cloudflare
+sudo pip install cloudscraper
+
+# Installation du plugin ruTorrent ratiocolor
 cd /var/www/rutorrent/plugins/
+sudo git clone https://github.com/Micdu70/rutorrent-ratiocolor.git ratiocolor
 
-sudo git clone https://github.com/xombiemp/rutorrentMobile.git mobile
+# Installation du plugin ruTorrent Logoff
+cd /var/www/rutorrent/plugins/
+sudo wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/rutorrent-logoff/logoff-1.3.tar.gz
+sudo tar xzfv  logoff-1.3.tar.gz
+sudo rm logoff-1.3.tar.gz
 
-sudo svn checkout http://svn.rutorrent.org/svn/filemanager/trunk/filemanager
+# Installation du plugin GeoIP2
+cd /var/www/rutorrent/plugins/
+sudo git clone https://github.com/Micdu70/geoip2-rutorrent.git geoip2
+
+# Installation du plugin ruTorrent pausewebui
+cd /var/www/rutorrent/plugins/
+sudo wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/rutorrent-pausewebui/pausewebui.1.2.zip
+sudo unzip pausewebui.1.2.zip
+sudo rm -R  __MACOSX pausewebui.1.2.zip
+
+# Installation du plugin ruTorrent pausewebui
+cd /tmp
+sudo git clone https://github.com/Micdu70/rutorrent-thirdparty-plugins.git
+cd rutorrent-thirdparty-plugins
+sudo mv filemanager /var/www/rutorrent/plugins/filemanager
+
+# Changement de propriétaire des fichiers web
+sudo chown -R www-data:www-data /var/www/rutorrent
+
 
 # Configure plugins
 cd $current_dir
