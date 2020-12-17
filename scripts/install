@@ -13,32 +13,20 @@ source /usr/share/yunohost/helpers
 
 # Check domain/path availability
 #yunohost app checkurl $domain$path -a rutorrent
-ynh_webpath_register --app="rutorrent" --domain=$domain --path_url=$path
+ynh_webpath_available --domain=$domain --path_url=$path
 if [[ ! $? -eq 0 ]]; then
   echo "Error: domain/path not available"
   exit 1
-fi
-
-
-# Install source Rutorrent
-ynh_package_is_installed "rutorrent"
-
-if ! ynh_package_is_installed "rutorrent" ; then
-  echo "Oups, le paquet n'est pas installé."
 else
-  echo "Le paquet est installé !"
+  ynh_webpath_register --app="rutorrent" --domain=$domain --path_url=$path
 fi
 
 if [ "$debian_version" = "buster" ]; then
   cd /tmp
     
-  if [ -f /etc/apt/sources.list.d/rutorrent.list ]; then
-    rm /etc/apt/sources.list.d/rutorrent.list
-  fi
-
 #  apt install -y apt-transport-https gnupg2
-ynh_install_app_dependencies apt-transport-https gnupg2
-
+  ynh_package_install apt-transport-https gnupg2
+  ynh_install_extra_app_dependencies --repo="deb http://ftp2.fr.debian.org/debian/ buster main non-free" --package="rar unrar"
 #  echo "#Depot sury-php
 #deb https://packages.sury.org/php/bu ster main" >> /etc/apt/sources.list.d/sury-php.list
 #ynh_install_extra_app_dependencies --repo="https://packages.sury.org/php/bu ster main" --key="https://packages.sury.org/php/apt.gpg" --package="
@@ -50,12 +38,12 @@ ynh_install_app_dependencies apt-transport-https gnupg2
 
 #  echo "#Depot multimedia
 #deb http://www.deb-multimedia.org buster main non-free" >> /etc/apt/sources.list.d/multimedia.list
-ynh_install_extra_app_dependencies --repo="http://www.deb-multimedia.org buster main non-free" --package="ffmpeg"
+#ynh_install_extra_app_dependencies --repo="deb http://www.deb-multimedia.org buster main non-free" --package="ffmpeg"
 
 
 #  echo "#Depot mediainfo
 #deb http://mediaarea.net/repo/deb/debian/ buster main" >> /etc/apt/sources.list.d/mediainfo.list
-ynh_install_extra_app_dependencies --repo="http://mediaarea.net/repo/deb/debian/ buster main" --key="http://mediaarea.net/repo/deb/debian/pubkey.gpg" --package="mediainfo"
+ynh_install_extra_app_dependencies --repo="deb http://mediaarea.net/repo/deb/debian/ buster main" --key="http://mediaarea.net/repo/deb/debian/pubkey.gpg" --package="mediainfo"
 
 
 #  wget https://packages.sury.org/php/apt.gpg -O sury.gpg 2>&1 && apt-key add sury.gpg
@@ -65,12 +53,12 @@ ynh_install_extra_app_dependencies --repo="http://mediaarea.net/repo/deb/debian/
 fi
 
 # Install dependencies
-apt-get update -oAcquire::AllowInsecureRepositories=true
-apt install -y --allow-unauthenticated deb-multimedia-keyring
-apt update
+#apt-get update -oAcquire::AllowInsecureRepositories=true
+#apt install -y --allow-unauthenticated deb-multimedia-keyring
+#apt update
 
 #apt install -y \
-ynh_install_app_dependencies \
+ynh_package_install \
   apache2-utils \
   automake \
   htop \
