@@ -37,7 +37,7 @@ current_dir=${PWD}
 ynh_script_progression --message="Validating installation parameters..."
 
 # Register (book) web path
-ynh_webpath_register --app=$appli --domain=$domain --path_url=$path
+ynh_webpath_register --app=$app --domain=$domain --path_url=$path
 
 
 #=================================================
@@ -45,8 +45,8 @@ ynh_webpath_register --app=$appli --domain=$domain --path_url=$path
 #=================================================
 
 ynh_script_progression --message="Storing installation settings..." --weight=2
-ynh_app_setting_set --app=$appli --key=domain --value=$domain
-ynh_app_setting_set --app=$appli --key=path --value=$path
+ynh_app_setting_set --app=$app --key=domain --value=$domain
+ynh_app_setting_set --app=$app --key=path --value=$path
 
 
 #=================================================
@@ -61,7 +61,7 @@ ynh_script_progression --message="Configuring firewall..." --weight=16
 port=$(ynh_find_port --port=45069)
 # Open this port
 ynh_exec_warn_less yunohost firewall allow --no-upnp TCP $port
-ynh_app_setting_set --app=$appli --key=port --value=$port
+ynh_app_setting_set --app=$app --key=port --value=$port
 
 
 #=================================================
