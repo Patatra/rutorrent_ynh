@@ -12,7 +12,8 @@ debian_version=$(lsb_release -c -s)
 source /usr/share/yunohost/helpers
 
 # Check domain/path availability
-sudo yunohost app checkurl $domain$path -a rutorrent
+#yunohost app checkurl $domain$path -a rutorrent
+ynh_webpath_register --app="rutorrent" --domain=$domain --path_url=$path
 if [[ ! $? -eq 0 ]]; then
   echo "Error: domain/path not available"
   exit 1
@@ -32,41 +33,49 @@ if [ "$debian_version" = "buster" ]; then
   cd /tmp
     
   if [ -f /etc/apt/sources.list.d/rutorrent.list ]; then
-    sudo rm /etc/apt/sources.list.d/rutorrent.list
+    rm /etc/apt/sources.list.d/rutorrent.list
   fi
 
-  apt install -y apt-transport-https gnupg2
-  echo "#Depot sury-php
-deb https://packages.sury.org/php/ buster main" >> /etc/apt/sources.list.d/sury-php.list
+#  apt install -y apt-transport-https gnupg2
+ynh_install_app_dependencies apt-transport-https gnupg2
 
-  echo "#Depot paquets proprietaires
-deb http://ftp2.fr.debian.org/debian/ buster main non-free
-deb-src http://ftp2.fr.debian.org/debian/ buster main non-free" >> /etc/apt/sources.list.d/non-free.list
+#  echo "#Depot sury-php
+#deb https://packages.sury.org/php/bu ster main" >> /etc/apt/sources.list.d/sury-php.list
+#ynh_install_extra_app_dependencies --repo="https://packages.sury.org/php/bu ster main" --key="https://packages.sury.org/php/apt.gpg" --package="
 
-  echo "#Depot multimedia
-deb http://www.deb-multimedia.org buster main non-free" >> /etc/apt/sources.list.d/multimedia.list
 
-  echo "#Depot mediainfo
-deb http://mediaarea.net/repo/deb/debian/ buster main" >> /etc/apt/sources.list.d/mediainfo.list
+#  echo "#Depot paquets proprietaires
+#deb http://ftp2.fr.debian.org/debian/ buster main non-free
+#deb-src http://ftp2.fr.debian.org/debian/ buster main non-free" >> /etc/apt/sources.list.d/non-free.list
 
-  wget https://packages.sury.org/php/apt.gpg -O sury.gpg && apt-key add sury.gpg
+#  echo "#Depot multimedia
+#deb http://www.deb-multimedia.org buster main non-free" >> /etc/apt/sources.list.d/multimedia.list
+ynh_install_extra_app_dependencies --repo="http://www.deb-multimedia.org buster main non-free" --package="ffmpeg"
 
-  wget http://mediaarea.net/repo/deb/debian/pubkey.gpg -O mediainfo.gpg && apt-key add mediainfo.gpg
+
+#  echo "#Depot mediainfo
+#deb http://mediaarea.net/repo/deb/debian/ buster main" >> /etc/apt/sources.list.d/mediainfo.list
+ynh_install_extra_app_dependencies --repo="http://mediaarea.net/repo/deb/debian/ buster main" --key="http://mediaarea.net/repo/deb/debian/pubkey.gpg" --package="mediainfo"
+
+
+#  wget https://packages.sury.org/php/apt.gpg -O sury.gpg 2>&1 && apt-key add sury.gpg
+
+#  wget http://mediaarea.net/repo/deb/debian/pubkey.gpg -O mediainfo.gpg 2>&1 && apt-key add mediainfo.gpg
 
 fi
 
 # Install dependencies
-sudo apt-get update -oAcquire::AllowInsecureRepositories=true
-sudo apt install -y --allow-unauthenticated deb-multimedia-keyring
-sudo apt update
+apt-get update -oAcquire::AllowInsecureRepositories=true
+apt install -y --allow-unauthenticated deb-multimedia-keyring
+apt update
 
-sudo apt install -y \
+#apt install -y \
+ynh_install_app_dependencies \
   apache2-utils \
   automake \
   htop \
   build-essential \
   curl \
-  ffmpeg \
   gawk \
   git \
   libcppunit-dev \
@@ -77,7 +86,6 @@ sudo apt install -y \
   libsox-fmt-mp3 \
   libssl-dev \
   libtool \
-  mediainfo \
   mktorrent \
   net-tools \
   nginx \
@@ -107,130 +115,132 @@ sudo apt install -y \
 
 # Build xmlrpc
 cd /tmp
-sudo git clone https://github.com/mirror/xmlrpc-c.git
-sudo cd xmlrpc-c/stable/
-sudo ./configure
-sudo make
-sudo make install
+git clone https://github.com/mirror/xmlrpc-c.git
+cd xmlrpc-c/stable/
+./configure
+make
+make install
 
 # Build libtorrent
 cd /tmp
-sudo git clone https://github.com/rakshasa/libtorrent.git
+git clone https://github.com/rakshasa/libtorrent.git
 cd libtorrent
-sudo git checkout v0.13.8
-sudo ./autogen.sh
-sudo ./configure --disable-debug
-sudo make
-sudo make install
+git checkout v0.13.8
+./autogen.sh
+./configure --disable-debug
+make
+make install
 
 # Build rtorrent
 cd /tmp
-sudo git clone https://github.com/rakshasa/rtorrent.git
+git clone https://github.com/rakshasa/rtorrent.git
 cd rtorrent
-sudo git checkout 0.9.8
-sudo ./autogen.sh
-sudo ./configure --with-xmlrpc-c --with-ncurses --disable-debug
-sudo make
-sudo make install
+git checkout 0.9.8
+./autogen.sh
+./configure --with-xmlrpc-c --with-ncurses --disable-debug
+make
+make install
 
-sudo ldconfig
+ldconfig
 
 # Install rutorrent
-sudo git clone https://github.com/Novik/ruTorrent.git /var/www/rutorrent
+git clone https://github.com/Novik/ruTorrent.git /var/www/rutorrent
 
 # Installation cloudscraper pour plugin _cloudflare
-sudo pip install cloudscraper
+pip install cloudscraper
 
 # Installation du plugin ruTorrent ratiocolor
 cd /var/www/rutorrent/plugins/
-sudo git clone https://github.com/Micdu70/rutorrent-ratiocolor.git ratiocolor
+git clone https://github.com/Micdu70/rutorrent-ratiocolor.git ratiocolor
 
 # Installation du plugin ruTorrent Logoff
 cd /var/www/rutorrent/plugins/
-sudo wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/rutorrent-logoff/logoff-1.3.tar.gz
-sudo tar xzfv  logoff-1.3.tar.gz
-sudo rm logoff-1.3.tar.gz
+wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/rutorrent-logoff/logoff-1.3.tar.gz 2>&1
+tar xzfv  logoff-1.3.tar.gz
+rm logoff-1.3.tar.gz
 
 # Installation du plugin GeoIP2
 cd /var/www/rutorrent/plugins/
-sudo git clone https://github.com/Micdu70/geoip2-rutorrent.git geoip2
+git clone https://github.com/Micdu70/geoip2-rutorrent.git geoip2
 
 # Installation du plugin ruTorrent pausewebui
 cd /var/www/rutorrent/plugins/
-sudo wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/rutorrent-pausewebui/pausewebui.1.2.zip
-sudo unzip pausewebui.1.2.zip
-sudo rm -R  __MACOSX pausewebui.1.2.zip
+wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/rutorrent-pausewebui/pausewebui.1.2.zip 2>&1
+unzip pausewebui.1.2.zip
+ynh_secure_remove --file=__MACOSX pausewebui.1.2.zip
 
 # Installation du plugin ruTorrent pausewebui
 cd /tmp
-sudo git clone https://github.com/Micdu70/rutorrent-thirdparty-plugins.git
+git clone https://github.com/Micdu70/rutorrent-thirdparty-plugins.git
 cd rutorrent-thirdparty-plugins
-sudo mv filemanager /var/www/rutorrent/plugins/filemanager
+mv filemanager /var/www/rutorrent/plugins/filemanager
 
 # Changement de propriétaire des fichiers web
-sudo chown -R www-data:www-data /var/www/rutorrent
+chown -R www-data:www-data /var/www/rutorrent
 
 
 # Configure plugins
 cd $current_dir
 
-sudo rm /var/www/rutorrent/plugins/create/conf.php
-sudo cp ../sources/plugins/create/conf.php /var/www/rutorrent/plugins/create/conf.php
+rm /var/www/rutorrent/plugins/create/conf.php
+cp ../sources/plugins/create/conf.php /var/www/rutorrent/plugins/create/conf.php
 
-sudo rm /var/www/rutorrent/plugins/filemanager/conf.php
-sudo cp ../sources/plugins/filemanager/conf.php /var/www/rutorrent/plugins/filemanager/conf.php
+rm /var/www/rutorrent/plugins/filemanager/conf.php
+cp ../sources/plugins/filemanager/conf.php /var/www/rutorrent/plugins/filemanager/conf.php
 
 # Configure nginx
-sudo sed -i "s@PATHTOCHANGE@$path@g" ../sources/nginx/rutorrent.conf
-sudo cp ../sources/nginx/rutorrent.conf /etc/nginx/conf.d/$domain.d/rutorrent.conf
+sed -i "s@PATHTOCHANGE@$path@g" ../sources/nginx/rutorrent.conf
+cp ../sources/nginx/rutorrent.conf /etc/nginx/conf.d/$domain.d/rutorrent.conf
 
 # Create data dir
-sudo mkdir $data_dir
-sudo mkdir $data_dir/watch
-sudo mkdir $data_dir/downloads
-sudo mkdir $data_dir/.session
+mkdir $data_dir
+mkdir $data_dir/watch
+mkdir $data_dir/downloads
+mkdir $data_dir/.session
 
 # Create rtorrent user
-sudo useradd -p $(openssl passwd -1 $passw) -m rtorrent
+useradd -p $(openssl passwd -1 $passw) -m rtorrent
 
 # Add rtorrent config
-sudo sed -i "s@DATA_DIR@$data_dir@g" ../sources/rtorrent/rtorrent.rc
-sudo cp ../sources/rtorrent/rtorrent.rc /home/rtorrent/.rtorrent.rc
-sudo chown -R rtorrent:www-data /home/rtorrent/.rtorrent.rc
+sed -i "s@DATA_DIR@$data_dir@g" ../sources/rtorrent/rtorrent.rc
+cp ../sources/rtorrent/rtorrent.rc /home/rtorrent/.rtorrent.rc
+chown -R rtorrent:www-data /home/rtorrent/.rtorrent.rc
 
-sudo chown -R rtorrent:www-data $data_dir
-sudo chmod 755 $data_dir
+chown -R rtorrent:www-data $data_dir
+chmod 755 $data_dir
 
 # Configure rutorrent
-sudo sed -i "s@DATA_DIR@$data_dir@g" ../sources/rutorrent/config.php
-sudo cp ../sources/rutorrent/config.php /var/www/rutorrent/conf/config.php
-sudo chown -R www-data:www-data /var/www/rutorrent
+sed -i "s@DATA_DIR@$data_dir@g" ../sources/rutorrent/config.php
+cp ../sources/rutorrent/config.php /var/www/rutorrent/conf/config.php
+chown -R www-data:www-data /var/www/rutorrent
 
 # Check port availability
-sudo yunohost app checkport 45069
+#yunohost app checkport 45069
+ynh_port_available --port="45069"
 if [[ ! $? -eq 0 ]]; then
   exit 1
 fi
 
 # Open port in firewall
-sudo yunohost firewall allow TCP 45069 > /dev/null 2>&1
+yunohost firewall allow TCP 45069 > /dev/null 2>&1
 
 # Launch rtorrent on boot
-sudo cp ../sources/init/rtorrent /etc/init.d/rtorrent
-sudo chmod +x /etc/init.d/rtorrent
-sudo update-rc.d rtorrent defaults
+cp ../sources/init/rtorrent /etc/init.d/rtorrent
+chmod +x /etc/init.d/rtorrent
+update-rc.d rtorrent defaults
 
 # Start rtorrent
-sudo service rtorrent start
-sudo yunohost app ssowatconf
-sudo service nginx reload
+service rtorrent start
+yunohost app ssowatconf
+service nginx reload
 
 # Save config
-sudo yunohost app setting rutorrent data_dir -v $data_dir
-sudo yunohost app setting rutorrent path -v $path
-
+#yunohost app setting rutorrent data_dir -v $data_dir
+#yunohost app setting rutorrent path -v $path
+ynh_app_setting_set --app="rutorrent" --key="data_dir" --value=$data_dir
+ynh_app_setting_set --app="rutorrent" --key="path" --value=$path
 
 
 
 # Register the service on yunohost
-sudo yunohost service add rtorrent
+yunohost service add rtorrent
