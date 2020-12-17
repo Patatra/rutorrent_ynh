@@ -1,105 +1,95 @@
 #!/bin/bash
 
-# Retrieve arguments
-domain=$1
-path=$2
-data_dir=$3
-passw=$4
-current_dir=${PWD}
-debian_version=$(lsb_release -c -s)
+#=================================================
+# GENERIC STARTING
+#=================================================
+# IMPORT GENERIC HELPERS
+#=================================================
 
-# Source app helpers
 source /usr/share/yunohost/helpers
+pkg_dependencies="apache2-utils automake htop build-essential curl gawk git libcppunit-dev libcurl4-openssl-dev libncurses5-dev libsigc++-2.0-dev libsox-fmt-all libsox-fmt-mp3 libssl-dev libtool mktorrent net-tools nginx php7.3 php7.3-cli php7.3-common php7.3-curl php7.3-fpm php7.3-json php7.3-mbstring php7.3-opcache php7.3-readline php7.3-xml php-geoip pkg-config psmisc python-pip screen subversion unzip sox vim zip zlib1g-dev apt-transport-https gnupg2"
 
-# Check domain/path availability
-#yunohost app checkurl $domain$path -a rutorrent
-ynh_webpath_available --domain=$domain --path_url=$path
-if [[ ! $? -eq 0 ]]; then
-  echo "Error: domain/path not available"
-  exit 1
-else
-  ynh_webpath_register --app="rutorrent" --domain=$domain --path_url=$path
-fi
+#=================================================
+# MANAGE FAILURE OF THE SCRIPT
+#=================================================
 
-if [ "$debian_version" = "buster" ]; then
-  cd /tmp
-    
-#  apt install -y apt-transport-https gnupg2
-  ynh_package_install apt-transport-https gnupg2
-  ynh_install_extra_app_dependencies --repo="deb http://ftp2.fr.debian.org/debian/ buster main non-free" --package="rar unrar"
-#  echo "#Depot sury-php
-#deb https://packages.sury.org/php/bu ster main" >> /etc/apt/sources.list.d/sury-php.list
-#ynh_install_extra_app_dependencies --repo="https://packages.sury.org/php/bu ster main" --key="https://packages.sury.org/php/apt.gpg" --package="
+# Exit if an error occurs during the execution of the script
+ynh_abort_if_errors
 
 
-#  echo "#Depot paquets proprietaires
-#deb http://ftp2.fr.debian.org/debian/ buster main non-free
-#deb-src http://ftp2.fr.debian.org/debian/ buster main non-free" >> /etc/apt/sources.list.d/non-free.list
+#=================================================
+# RETRIEVE ARGUMENTS FROM THE MANIFEST
+#=================================================
 
-#  echo "#Depot multimedia
-#deb http://www.deb-multimedia.org buster main non-free" >> /etc/apt/sources.list.d/multimedia.list
-#ynh_install_extra_app_dependencies --repo="deb http://www.deb-multimedia.org buster main non-free" --package="ffmpeg"
+domain=$YNH_APP_ARG_DOMAIN
+path=$YNH_APP_ARG_PATH
+appli=$YNH_APP_INSTANCE_NAME
+data_dir="/home/yunohost.rutorrent"
+#passw=$4
+current_dir=${PWD}
+#debian_version=$(lsb_release -c -s)
 
 
-#  echo "#Depot mediainfo
-#deb http://mediaarea.net/repo/deb/debian/ buster main" >> /etc/apt/sources.list.d/mediainfo.list
+#=================================================
+# CHECK IF THE APP CAN BE INSTALLED WITH THIS ARGS
+#=================================================
+
+ynh_script_progression --message="Validating installation parameters..."
+
+# Register (book) web path
+ynh_webpath_register --app=$appLI --domain=$domain --path_url=$path
+
+
+#=================================================
+# STORE SETTINGS FROM MANIFEST
+#=================================================
+
+ynh_script_progression --message="Storing installation settings..." --weight=2
+ynh_app_setting_set --app=$appli --key=domain --value=$domain
+ynh_app_setting_set --app=$appli --key=path --value=$path
+
+
+#=================================================
+# STANDARD MODIFICATIONS
+#=================================================
+# FIND AND OPEN PORTS
+#=================================================
+
+ynh_script_progression --message="Configuring firewall..." --weight=16
+
+# Find a free port
+port=$(ynh_find_port --port=45069)
+# Open this port
+ynh_exec_warn_less yunohost firewall allow --no-upnp TCP $port
+ynh_app_setting_set --app=$app --key=port --value=$port
+
+
+#=================================================
+# INSTALL TRANSMISSION
+#=================================================
+ynh_script_progression --message="Installing Rutorrent..." --weight=16
+
+ynh_install_app_dependencies $pkg_dependencies
+ynh_install_extra_app_dependencies --repo="deb http://ftp2.fr.debian.org/debian/ buster main non-free" --package="rar unrar"
 ynh_install_extra_app_dependencies --repo="deb http://mediaarea.net/repo/deb/debian/ buster main" --key="http://mediaarea.net/repo/deb/debian/pubkey.gpg" --package="mediainfo"
 
+#=================================================
+# NGINX CONFIGURATION
+#=================================================
+ynh_script_progression --message="Configuring NGINX web server..." --weight=2
 
-#  wget https://packages.sury.org/php/apt.gpg -O sury.gpg 2>&1 && apt-key add sury.gpg
+# Create a dedicated NGINX config
+ynh_add_nginx_config
 
-#  wget http://mediaarea.net/repo/deb/debian/pubkey.gpg -O mediainfo.gpg 2>&1 && apt-key add mediainfo.gpg
 
-fi
+#=================================================
+# SPECIFIC SETUP
+#=================================================
+# CREATE DIRECTORIES
+#=================================================
 
-# Install dependencies
-#apt-get update -oAcquire::AllowInsecureRepositories=true
-#apt install -y --allow-unauthenticated deb-multimedia-keyring
-#apt update
+mkdir -p "/home/$data_dir/{progress,completed,watched}"
 
-#apt install -y \
-ynh_package_install \
-  apache2-utils \
-  automake \
-  htop \
-  build-essential \
-  curl \
-  gawk \
-  git \
-  libcppunit-dev \
-  libcurl4-openssl-dev \
-  libncurses5-dev \
-  libsigc++-2.0-dev \
-  libsox-fmt-all \
-  libsox-fmt-mp3 \
-  libssl-dev \
-  libtool \
-  mktorrent \
-  net-tools \
-  nginx \
-  php7.3 \
-  php7.3-cli \
-  php7.3-common \
-  php7.3-curl \
-  php7.3-fpm \
-  php7.3-json \
-  php7.3-mbstring \
-  php7.3-opcache \
-  php7.3-readline \
-  php7.3-xml \
-  php-geoip \
-  pkg-config \
-  psmisc \
-  python-pip \
-  rar \
-  screen \
-  subversion \
-  unrar \
-  unzip \
-  sox \
-  vim \
-  zip \
-  zlib1g-dev
 
 # Build xmlrpc
 cd /tmp
@@ -177,8 +167,8 @@ rm /var/www/rutorrent/plugins/filemanager/conf.php
 cp ../sources/plugins/filemanager/conf.php /var/www/rutorrent/plugins/filemanager/conf.php
 
 # Configure nginx
-sed -i "s@PATHTOCHANGE@$path@g" ../sources/nginx/rutorrent.conf
-cp ../sources/nginx/rutorrent.conf /etc/nginx/conf.d/$domain.d/rutorrent.conf
+#sed -i "s@PATHTOCHANGE@$path@g" ../sources/nginx/rutorrent.conf
+#cp ../sources/nginx/rutorrent.conf /etc/nginx/conf.d/$domain.d/rutorrent.conf
 
 # Create data dir
 mkdir $data_dir
@@ -202,33 +192,17 @@ sed -i "s@DATA_DIR@$data_dir@g" ../sources/rutorrent/config.php
 cp ../sources/rutorrent/config.php /var/www/rutorrent/conf/config.php
 chown -R www-data:www-data /var/www/rutorrent
 
-# Check port availability
-#yunohost app checkport 45069
-ynh_port_available --port="45069"
-if [[ ! $? -eq 0 ]]; then
-  exit 1
-fi
-
-# Open port in firewall
-yunohost firewall allow TCP 45069 > /dev/null 2>&1
-
 # Launch rtorrent on boot
 cp ../sources/init/rtorrent /etc/init.d/rtorrent
 chmod +x /etc/init.d/rtorrent
 update-rc.d rtorrent defaults
 
 # Start rtorrent
-service rtorrent start
+ynh_systemd_action --service-name=rtorrent --action=start
 yunohost app ssowatconf
-service nginx reload
-
-# Save config
-#yunohost app setting rutorrent data_dir -v $data_dir
-#yunohost app setting rutorrent path -v $path
-ynh_app_setting_set --app="rutorrent" --key="data_dir" --value=$data_dir
-ynh_app_setting_set --app="rutorrent" --key="path" --value=$path
+ynh_systemd_action --service_name=nginx --action=reload
 
 
 
 # Register the service on yunohost
-yunohost service add rtorrent
+yunohost service add rtorrent --description="Rutorrent"
