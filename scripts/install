@@ -37,7 +37,7 @@ current_dir=${PWD}
 ynh_script_progression --message="Validating installation parameters..."
 
 # Register (book) web path
-ynh_webpath_register --app=$appLI --domain=$domain --path_url=$path
+ynh_webpath_register --app=$appli --domain=$domain --path_url=$path
 
 
 #=================================================
