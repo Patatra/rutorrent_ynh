@@ -70,8 +70,8 @@ ynh_app_setting_set --app=$appli --key=port --value=$port
 ynh_script_progression --message="Installing Rutorrent..." --weight=16
 
 ynh_install_app_dependencies $pkg_dependencies
-ynh_install_extra_app_dependencies --repo="deb http://ftp2.fr.debian.org/debian/ buster main non-free" --package="rar unrar"
-ynh_install_extra_app_dependencies --repo="deb http://mediaarea.net/repo/deb/debian/ buster main" --key="http://mediaarea.net/repo/deb/debian/pubkey.gpg" --package="mediainfo"
+#ynh_install_extra_app_dependencies --repo="deb http://ftp2.fr.debian.org/debian/ buster main non-free" --package="rar unrar"
+#ynh_install_extra_app_dependencies --repo="deb http://mediaarea.net/repo/deb/debian/ buster main" --key="http://mediaarea.net/repo/deb/debian/pubkey.gpg" --package="mediainfo"
 
 #=================================================
 # NGINX CONFIGURATION
