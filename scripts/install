@@ -7,7 +7,7 @@
 #=================================================
 
 source /usr/share/yunohost/helpers
-pkg_dependencies="apache2-utils htop libcppunit-dev libcurl4-openssl-dev libncurses5-dev libsigc++-2.0-dev libsox-fmt-all libsox-fmt-mp3 libssl-dev mktorrent net-tools php-geoip pkg-config screen subversion sox vim zip zlib1g-dev apt-transport-https gnupg2"
+pkg_dependencies="apache2-utils htop libcppunit-dev libcurl4-openssl-dev libncurses5-dev libsigc++-2.0-dev libsox-fmt-all libsox-fmt-mp3 libssl-dev mktorrent net-tools php7.3-geoip pkg-config screen subversion sox vim zip zlib1g-dev apt-transport-https gnupg2"
 
 #=================================================
 # MANAGE FAILURE OF THE SCRIPT

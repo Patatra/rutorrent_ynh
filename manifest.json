@@ -6,15 +6,15 @@
         "en": "Torrent client",
         "fr": "Client torrent"
     },
-    "version": "1.0.0~ynh1",
-    "license": " GPL-3.0-or-later",
-    "url": "https://github.com/Patatra/rutorrent_ynh",
+    "version": "1.0~ynh3",
+    "license": " GPL-3.0",
+    "url": "https://github.com/Novik/ruTorrent",
     "maintainer": {
-        "name": "yolateng0 ",
-        "email": "yolateng0@yolateng0.nohost.me"
+        "name": "Patatra",
+        "email": "patatra@gmail.com"
     },
     "requirements": {
-        "yunohost": ">= 4.0.0"
+        "yunohost": ">= 3.8.1"
     },
     "multi_instance": false,
     "services": [
@@ -41,16 +41,6 @@
                 },
                 "example": "/rutorrent",
                 "default": "/rutorrent"
-            },
-            {
-                "name": "data_dir",
-                "type": "path",
-                "ask": {
-                    "en": "Choose a folder to store the downloads",
-                    "fr": "Choisissez un dossier pour sauver les telechargements"
-                },
-                "example": "/mnt/disk1/torrents",
-                "default": "/home/rtorrent"
             },
             {
                 "name": "password",
